@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>استعلام أرقام الجلوس</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f4f6f8; padding: 20px; direction: rtl; text-align: center; }
+    .card { max-width: 450px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    input, select, button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    button { background: #0070f3; color: white; border: none; font-weight: bold; cursor: pointer; }
+    #result { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>استعلام عن رقم الجلوس</h2>
+    <form id="searchForm">
+      <select id="academic_year" required>
+        <option value="2025/2026">2025/2026</option>
+        <option value="2024/2025">2024/2025</option>
+      </select>
+      <input type="text" id="student_name" placeholder="اسم الطالب الرباعي" required>
+      <button type="submit">بحث</button>
+    </form>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resBox = document.getElementById('result');
+      resBox.innerText = 'جاري البحث...';
+      
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            academic_year: document.getElementById('academic_year').value,
+            student_name: document.getElementById('student_name').value
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          resBox.innerHTML = `<span style="color:green">رقم الجلوس: ${data.seat_number}</span>`;
+        } else {
+          resBox.innerHTML = `<span style="color:red">${data.message}</span>`;
+        }
+      } catch (err) {
+        resBox.innerHTML = `<span style="color:red">حدث خطأ في الاتصال.</span>`;
+      }
+    });
+  </script>
+</body>
+</html>
