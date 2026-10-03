@@ -1,9 +1,12 @@
+if (typeof File === 'undefined') {
+  global.File = class File extends Blob {};
+}
+
 const express = require("express");
 const axios = require("axios");
 const { wrapper } = require("axios-cookiejar-support");
 const { CookieJar } = require("tough-cookie");
 const cheerio = require("cheerio");
-const { HttpsProxyAgent } = require("https-proxy-agent");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,7 +49,6 @@ function absoluteUrl(url) {
 }
 
 function createHttpClient(jar) {
-  const proxyUrl = process.env.FIXIE_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
   const config = {
     jar,
     withCredentials: true,
@@ -55,8 +57,14 @@ function createHttpClient(jar) {
     headers: REAL_BROWSER_HEADERS
   };
 
+  const proxyUrl = process.env.FIXIE_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
   if (proxyUrl) {
-    config.httpsAgent = new HttpsProxyAgent(proxyUrl);
+    try {
+      const { HttpsProxyAgent } = require("https-proxy-agent");
+      config.httpsAgent = new HttpsProxyAgent(proxyUrl);
+    } catch (e) {
+      console.warn("https-proxy-agent is not installed, proxy ignored.");
+    }
   }
 
   return wrapper(axios.create(config));
@@ -166,4 +174,4 @@ app.get("/*splat", (_req, res) => {
   res.sendFile(require("path").join(__dirname, "public", "index.html"));
 });
 
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Seat Number Search running on port ${PORT}`));
